@@ -1,68 +1,80 @@
-import mongoose from "mongoose"
-import bcrypt from "bcrypt"
-const userSchema = new mongoose.Schema({
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+const userSchema = new mongoose.Schema(
+  {
     // basic userInfo.
-    username:{
-        type:String,
-        required:[true,"username is required"],
-        unique:true,
-
+    username: {
+      type: String,
+      required: [true, "username is required"],
+      unique: true,
     },
-    fullname:{
-        type:String,
-        required:[true,"Name is required"],
-        minlength:3,
-        maxlength:30,
-        trim:true
+    fullname: {
+      type: String,
+      required: [true, "Name is required"],
+      minlength: 3,
+      maxlength: 30,
+      trim: true,
     },
-    email:{
-        type:String,
-        required:[true,"email is required"],
-        unique:true,
-        trim:true,
-        index:true
+    dob:{
+      type:date,
+      required:true
     },
-    phone:{
-        type:String,
-        required:[true,"Phone no. is requied"],
-        unique:true,
-        trim:true,
-        index:true
+    email: {
+      type: String,
+      required: [true, "email is required"],
+      unique: true,
+      trim: true,
+      index: true,
     },
-    password:{
-        type:String,
-        required:true,
-        select:false
+    phone: {
+      type: String,
+      required: [true, "Phone no. is requied"],
+      unique: true,
+      trim: true,
+      index: true,
     },
-    profile_pic:{
-        type:String,
-        default:null,
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
+    profile_pic: {
+      type: String,
+      default: null,
     },
 
     //role
-    role:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"role",
-        default:"pateint"
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "role",
+      default: "pateint",
     },
-    branch:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"branch",
-        default:null,
+    branch: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "branch",
+      default: null,
     },
-    otp:{
-        type:String,
-        select:false,
-        default:null,
-    }
+    otp: {
+      type: String,
+      select: false,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-},{
-    timestamps:true,
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.pre("save",async function(next){
-    if(!this.isModified("password")){
-        return next()
-    }
-    this.password = bcrypt.hashSync(this.password, 10)
-})
+userSchema.methods.comparePass = function (password) {
+  return bcrypt.compareSync(password, this.password);
+};
+
+const userModel = mongoose.model("user",userSchema);
+export default userModel
